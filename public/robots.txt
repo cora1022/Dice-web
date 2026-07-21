@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://dice.cora1022.com/sitemap.xml
+
