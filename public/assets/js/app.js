@@ -64,7 +64,7 @@ function renderDice(values = Array.from({ length: count }, () => null), animate 
   values.forEach((value, index) => {
     const die = document.createElement('div');
     const result = value ?? 1;
-    const [landX, landY] = value ? RESULT_ORIENTATIONS[result] : [-18, 28];
+    const [landX, landY] = value ? RESULT_ORIENTATIONS[result] : [0, 0];
     const direction = index % 2 === 0 ? -1 : 1;
 
     die.className = value ? 'die-card' : 'die-card is-pending';
@@ -73,14 +73,10 @@ function renderDice(values = Array.from({ length: count }, () => null), animate 
     die.style.setProperty('--delay', `${index * 45}ms`);
     die.style.setProperty('--land-x', `${landX}deg`);
     die.style.setProperty('--land-y', `${landY}deg`);
-    die.style.setProperty('--roll-start-x', `${landX - 720}deg`);
-    die.style.setProperty('--roll-start-y', `${landY + (direction * 360)}deg`);
-    die.style.setProperty('--roll-mid-x', `${landX - 360}deg`);
-    die.style.setProperty('--roll-mid-y', `${landY + (direction * 180)}deg`);
-    die.style.setProperty('--roll-late-x', `${landX - 22}deg`);
-    die.style.setProperty('--roll-late-y', `${landY + (direction * 18)}deg`);
-    die.style.setProperty('--roll-bounce-x', `${landX + 8}deg`);
-    die.style.setProperty('--roll-bounce-y', `${landY - (direction * 5)}deg`);
+    die.style.setProperty('--view-start-y', `${direction * 420}deg`);
+    die.style.setProperty('--view-mid-y', `${direction * 210}deg`);
+    die.style.setProperty('--view-late-y', `${direction * 36}deg`);
+    die.style.setProperty('--view-bounce-y', `${direction * -4}deg`);
     die.style.setProperty('--travel-start', `${direction * 78}px`);
     die.style.setProperty('--travel-mid', `${direction * 26}px`);
     die.style.setProperty('--travel-bounce', `${direction * -5}px`);
@@ -92,7 +88,10 @@ function renderDice(values = Array.from({ length: count }, () => null), animate 
     const cube = document.createElement('span');
     cube.className = 'die-cube';
     Object.entries(FACE_VALUES).forEach(([name, faceValue]) => cube.appendChild(createFace(name, faceValue)));
-    die.append(shadow, cube);
+    const cubeView = document.createElement('span');
+    cubeView.className = 'die-cube-view';
+    cubeView.appendChild(cube);
+    die.append(shadow, cubeView);
     diceGrid.appendChild(die);
   });
 }
