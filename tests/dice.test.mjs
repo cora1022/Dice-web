@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { DIE_SIDES, formatRoll, rollDice, secureRandomInt, validateDice } from '../public/assets/js/dice-core.js';
+import { DIE_SIDES, formatRoll, getDiceLayout, getRollDelay, getRollDuration, rollDice, secureRandomInt, validateDice } from '../public/assets/js/dice-core.js';
 
 function sequenceRandom(values) {
   let index = 0;
@@ -55,4 +55,23 @@ test('카메라 각도와 결과 면을 분리하고 초기 큐브를 평면화�
   assert.match(styles, /\.dice-grid\{perspective:none\}/);
   assert.match(styles, /\.die-card\.is-pending \.die-cube\{opacity:1;filter:none\}/);
   assert.match(styles, /\.dice-grid\.is-rolling \.die-cube-view\{animation:cube-roll-to-result/);
+});
+
+test('four or more dice use a stable compact grid', () => {
+  assert.deepEqual(getDiceLayout(4), { desktopColumns: 4, mobileColumns: 2 });
+  assert.deepEqual(getDiceLayout(6), { desktopColumns: 3, mobileColumns: 3 });
+  assert.deepEqual(getDiceLayout(12), { desktopColumns: 4, mobileColumns: 3 });
+});
+
+test('roll staggering stays short even with twelve dice', () => {
+  const delays = Array.from({ length: 12 }, (_, index) => getRollDelay(index));
+  assert.equal(Math.max(...delays), 70);
+  assert.equal(getRollDuration(12), 910);
+});
+
+test('cube faces overlap without rounded white corner gaps', async () => {
+  const styles = await readFile(new URL('../public/assets/css/styles.css', import.meta.url), 'utf8');
+  assert.match(styles, /\.die-face\{inset:-\.75px;[^}]*border:0;border-radius:0/);
+  assert.match(styles, /@keyframes cube-roll-contained/);
+  assert.doesNotMatch(styles.slice(styles.lastIndexOf('Seamless cube faces')), /78px|travel-start/);
 });
