@@ -26,8 +26,6 @@ export function rollDice(count, sides, randomInt = secureRandomInt) {
   return {
     values,
     total: values.reduce((sum, value) => sum + value, 0),
-    minimum: Math.min(...values),
-    maximum: Math.max(...values),
   };
 }
 

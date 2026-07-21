@@ -1,4 +1,4 @@
-import { MAX_DICE, MIN_DICE, formatRoll, rollDice, secureRandomInt } from './dice-core.js?v=20260721-1';
+import { MAX_DICE, MIN_DICE, formatRoll, rollDice, secureRandomInt } from './dice-core.js?v=20260721-2';
 
 const sideButtons = [...document.querySelectorAll('[data-sides]')];
 const countValue = document.querySelector('[data-count-value]');
@@ -9,8 +9,6 @@ const resetButton = document.querySelector('[data-reset]');
 const copyButton = document.querySelector('[data-copy]');
 const diceGrid = document.querySelector('[data-dice-grid]');
 const totalValue = document.querySelector('[data-total]');
-const minimumValue = document.querySelector('[data-minimum]');
-const maximumValue = document.querySelector('[data-maximum]');
 const status = document.querySelector('[data-status]');
 const historyList = document.querySelector('[data-history]');
 const emptyHistory = document.querySelector('[data-history-empty]');
@@ -37,13 +35,19 @@ function renderControls() {
   resetButton.disabled = rolling;
 }
 
-function renderDice(values = Array.from({ length: count }, () => null), animate = false) {
+function renderDice(values = Array.from({ length: count }, () => null), phase = 'idle') {
   diceGrid.replaceChildren();
-  diceGrid.classList.toggle('is-rolling', animate);
+  diceGrid.classList.remove('is-tumbling', 'is-settling');
+  if (phase !== 'idle') diceGrid.classList.add(`is-${phase}`);
   values.forEach((value, index) => {
     const die = document.createElement('div');
     die.className = 'die-card';
-    if (animate) die.style.setProperty('--delay', `${index * 32}ms`);
+    const direction = index % 2 === 0 ? -1 : 1;
+    die.style.setProperty('--delay', `${index * 32}ms`);
+    die.style.setProperty('--spin', index % 2 === 0 ? '-340deg' : '340deg');
+    die.style.setProperty('--turn-one', `${direction * 85}deg`);
+    die.style.setProperty('--turn-two', `${direction * 170}deg`);
+    die.style.setProperty('--turn-three', `${direction * 255}deg`);
     const type = document.createElement('span');
     type.className = 'die-type';
     type.textContent = `D${sides}`;
@@ -54,10 +58,15 @@ function renderDice(values = Array.from({ length: count }, () => null), animate 
   });
 }
 
+function updateDiceValues(values) {
+  const numbers = diceGrid.querySelectorAll('.die-card strong');
+  values.forEach((value, index) => {
+    if (numbers[index]) numbers[index].textContent = String(value);
+  });
+}
+
 function renderSummary(result = null) {
   totalValue.textContent = result?.total ?? '—';
-  minimumValue.textContent = result?.minimum ?? '—';
-  maximumValue.textContent = result?.maximum ?? '—';
   copyButton.disabled = !result || rolling;
 }
 
@@ -78,6 +87,8 @@ function renderHistory() {
 
 function setRolling(next) {
   rolling = next;
+  rollButton.classList.toggle('is-rolling', next);
+  diceGrid.setAttribute('aria-busy', String(next));
   renderControls();
   copyButton.disabled = next || !latest;
 }
@@ -85,11 +96,12 @@ function setRolling(next) {
 function finishRoll(result) {
   latest = { ...result, sides };
   history = [latest, ...history].slice(0, 10);
-  renderDice(result.values, !reduceMotion);
+  renderDice(result.values, reduceMotion ? 'idle' : 'settling');
   renderSummary(result);
   renderHistory();
   status.textContent = `${count}D${sides} 결과는 ${result.values.join(', ')}, 합계 ${result.total}입니다.`;
-  setRolling(false);
+  const landingTime = reduceMotion ? 0 : 680 + ((count - 1) * 32);
+  window.setTimeout(() => setRolling(false), landingTime);
 }
 
 function startRoll() {
@@ -98,15 +110,16 @@ function startRoll() {
   setRolling(true);
   status.textContent = '주사위를 굴리는 중입니다.';
   if (reduceMotion) { finishRoll(result); return; }
+  renderDice(Array.from({ length: count }, () => secureRandomInt(sides) + 1), 'tumbling');
   let frames = 0;
   const preview = setInterval(() => {
-    renderDice(Array.from({ length: count }, () => secureRandomInt(sides) + 1), true);
+    updateDiceValues(Array.from({ length: count }, () => secureRandomInt(sides) + 1));
     frames += 1;
-    if (frames >= 6) {
+    if (frames >= 8) {
       clearInterval(preview);
       finishRoll(result);
     }
-  }, 82);
+  }, 95);
 }
 
 async function copyLatest() {
