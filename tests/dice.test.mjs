@@ -46,4 +46,13 @@ test('화면은 정육면체의 여섯 면을 모두 생성한다', async () => 
   const source = await readFile(new URL('../public/assets/js/app.js', import.meta.url), 'utf8');
   assert.match(source, /front: 1, back: 6, right: 3, left: 4, top: 2, bottom: 5/);
   assert.match(source, /RESULT_ORIENTATIONS/);
+  assert.match(source, /cubeView\.className = 'die-cube-view'/);
+});
+
+test('카메라 각도와 결과 면을 분리하고 초기 큐브를 평면화하지 않는다', async () => {
+  const styles = await readFile(new URL('../public/assets/css/styles.css', import.meta.url), 'utf8');
+  assert.match(styles, /\.die-cube-view\{[^}]*transform:rotateX\(-14deg\) rotateY\(22deg\)/);
+  assert.match(styles, /\.dice-grid\{perspective:none\}/);
+  assert.match(styles, /\.die-card\.is-pending \.die-cube\{opacity:1;filter:none\}/);
+  assert.match(styles, /\.dice-grid\.is-rolling \.die-cube-view\{animation:cube-roll-to-result/);
 });
