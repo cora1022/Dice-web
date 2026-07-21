@@ -10,7 +10,7 @@ function sequenceRandom(values) {
 
 test('지정한 개수와 면의 범위 안에서 결과를 만든다', () => {
   const result = rollDice(4, 6, sequenceRandom([0, 5, 2, 3]));
-  assert.deepEqual(result, { values: [1, 6, 3, 4], total: 14, minimum: 1, maximum: 6 });
+  assert.deepEqual(result, { values: [1, 6, 3, 4], total: 14 });
 });
 
 test('D4부터 D100까지 지원한다', () => {
