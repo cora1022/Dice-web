@@ -1,4 +1,4 @@
-import { MAX_DICE, MIN_DICE, formatRoll, rollDice } from './dice-core.js?v=20260721-3';
+import { MAX_DICE, MIN_DICE, formatRoll, getDiceLayout, getRollDelay, getRollDuration, rollDice } from './dice-core.js?v=20260721-5';
 
 const countValue = document.querySelector('[data-count-value]');
 const decreaseButton = document.querySelector('[data-decrease]');
@@ -60,6 +60,9 @@ function createFace(name, value) {
 function renderDice(values = Array.from({ length: count }, () => null), animate = false) {
   diceGrid.replaceChildren();
   diceGrid.classList.toggle('is-rolling', animate);
+  const layout = getDiceLayout(values.length);
+  diceGrid.style.setProperty('--dice-columns', layout.desktopColumns);
+  diceGrid.style.setProperty('--mobile-dice-columns', layout.mobileColumns);
 
   values.forEach((value, index) => {
     const die = document.createElement('div');
@@ -70,16 +73,18 @@ function renderDice(values = Array.from({ length: count }, () => null), animate 
     die.className = value ? 'die-card' : 'die-card is-pending';
     die.setAttribute('role', 'img');
     die.setAttribute('aria-label', value ? `D6 주사위 결과 ${value}` : '굴리기 전 D6 주사위');
-    die.style.setProperty('--delay', `${index * 45}ms`);
+    die.style.setProperty('--delay', `${getRollDelay(index)}ms`);
     die.style.setProperty('--land-x', `${landX}deg`);
     die.style.setProperty('--land-y', `${landY}deg`);
-    die.style.setProperty('--view-start-y', `${direction * 420}deg`);
-    die.style.setProperty('--view-mid-y', `${direction * 210}deg`);
-    die.style.setProperty('--view-late-y', `${direction * 36}deg`);
-    die.style.setProperty('--view-bounce-y', `${direction * -4}deg`);
-    die.style.setProperty('--travel-start', `${direction * 78}px`);
-    die.style.setProperty('--travel-mid', `${direction * 26}px`);
-    die.style.setProperty('--travel-bounce', `${direction * -5}px`);
+    die.style.setProperty('--roll-shift', `${direction * (10 + (index % 3))}px`);
+    die.style.setProperty('--roll-mid-shift', `${direction * 4}px`);
+    die.style.setProperty('--roll-rise', `${-28 - ((index % 3) * 3)}px`);
+    die.style.setProperty('--roll-start-y', `${direction * 382}deg`);
+    die.style.setProperty('--roll-mid-y', `${direction * 196}deg`);
+    die.style.setProperty('--roll-late-y', `${direction * 31}deg`);
+    die.style.setProperty('--roll-start-z', `${direction * -5}deg`);
+    die.style.setProperty('--roll-mid-z', `${direction * 4}deg`);
+    die.style.setProperty('--roll-late-z', `${direction * -1}deg`);
 
     const shadow = document.createElement('span');
     shadow.className = 'die-shadow';
@@ -139,7 +144,7 @@ function startRoll() {
   setRolling(true);
   status.textContent = '정육면체 주사위를 굴리는 중입니다.';
   renderDice(result.values, !reduceMotion);
-  const duration = reduceMotion ? 0 : 920 + ((count - 1) * 45);
+  const duration = reduceMotion ? 0 : getRollDuration(count);
   window.setTimeout(() => finishRoll(result), duration);
 }
 

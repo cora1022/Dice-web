@@ -1,6 +1,7 @@
 export const DIE_SIDES = 6;
 export const MIN_DICE = 1;
 export const MAX_DICE = 12;
+export const ROLL_ANIMATION_MS = 840;
 
 export function secureRandomInt(maxExclusive, cryptoSource = globalThis.crypto) {
   if (!Number.isInteger(maxExclusive) || maxExclusive <= 0) throw new RangeError('최댓값은 양의 정수여야 합니다.');
@@ -17,6 +18,27 @@ export function validateDice(count) {
     throw new RangeError(`주사위는 ${MIN_DICE}개에서 ${MAX_DICE}개까지 굴릴 수 있습니다.`);
   }
   return true;
+}
+
+export function getDiceLayout(count) {
+  validateDice(count);
+  return {
+    desktopColumns: count <= 4 ? count : count <= 6 ? 3 : 4,
+    mobileColumns: count === 1 ? 1 : count <= 4 ? 2 : 3,
+  };
+}
+
+export function getRollDelay(index) {
+  if (!Number.isInteger(index) || index < 0 || index >= MAX_DICE) {
+    throw new RangeError('The die index is out of range.');
+  }
+  return ((index % 4) * 18) + (Math.floor(index / 4) * 8);
+}
+
+export function getRollDuration(count) {
+  validateDice(count);
+  const delays = Array.from({ length: count }, (_, index) => getRollDelay(index));
+  return ROLL_ANIMATION_MS + Math.max(...delays);
 }
 
 export function rollDice(count, randomInt = secureRandomInt) {
